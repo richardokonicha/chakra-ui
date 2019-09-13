@@ -7,18 +7,15 @@ import {
   createContext,
   useContext,
   useEffect,
-  useState,
   useRef,
+  useState,
 } from "react";
 import Box from "../Box";
 import CloseButton from "../CloseButton";
 import { useColorMode } from "../ColorModeProvider";
-// import usePopper from "../usePopper";
+import Popper, { PopperArrow } from "../Popper";
 import usePrevious from "../usePrevious";
-import Popper from "../Popper";
-import Fade from "../Popper/Fade";
-// import { PopoverContent as PopoverContentBase } from "./components";
-// import CSSTransition from "react-transition-group/CSSTransition";
+import { wrapEvent } from "../utils";
 
 /**
  * Hook based idea:
@@ -57,59 +54,31 @@ const PopoverTrigger = ({ children }) => {
 
   if (trigger === "click") {
     eventHandlers = {
-      onClick: event => {
-        onToggle();
-        if (child.props.onClick) {
-          child.props.onClick(event);
-        }
-      },
+      onClick: wrapEvent(child.props.onClick, onToggle),
     };
   }
 
   if (trigger === "hover") {
     eventHandlers = {
-      onFocus: event => {
-        onOpen();
-        if (child.props.onFocus) {
-          child.props.onFocus(event);
-        }
-      },
-      onKeyDown: event => {
+      onFocus: wrapEvent(child.props.onFocus, onOpen),
+      onKeyDown: wrapEvent(child.props.onKeyDown, event => {
         if (event.key === "Escape") {
-          setTimeout(() => {
-            onClose();
-          }, 300);
+          setTimeout(onClose, 300);
         }
-        if (child.props.onKeyDown) {
-          child.props.onKeyDown(event);
-        }
-      },
-      onBlur: event => {
-        onClose();
-        if (child.props.onBlur) {
-          child.props.onBlur(event);
-        }
-      },
-      onMouseEnter: event => {
+      }),
+      onBlur: wrapEvent(child.props.onBlur, onClose),
+      onMouseEnter: wrapEvent(child.props.onMouseEnter, () => {
         isHoveringRef.current = true;
-        setTimeout(() => {
-          onOpen();
-        }, 300);
-        if (child.props.onMouseEnter) {
-          child.props.onMouseEnter(event);
-        }
-      },
-      onMouseLeave: event => {
+        setTimeout(onOpen, 300);
+      }),
+      onMouseLeave: wrapEvent(child.props.onMouseLeave, () => {
         isHoveringRef.current = false;
         setTimeout(() => {
           if (isHoveringRef.current === false) {
             onClose();
           }
         }, 300);
-        if (child.props.onMouseLeave) {
-          child.props.onMouseLeave(event);
-        }
-      },
+      }),
     };
   }
 
@@ -124,44 +93,13 @@ const PopoverTrigger = ({ children }) => {
 
 /////////////////////////////////////////////////////////////////////
 
-const PopoverArrow = props => <Box x-arrow="" {...props} />;
-
-/////////////////////////////////////////////////////////////////////
-
-const PopoverCloseButton = ({ onClick, ...props }) => {
-  const { onClose } = usePopoverContext();
-  return (
-    <CloseButton
-      size="sm"
-      onClick={event => {
-        onClose();
-        if (onClick) {
-          onClick(event);
-        }
-      }}
-      aria-label="Close dialog"
-      position="absolute"
-      rounded="md"
-      top={1}
-      right={2}
-      p={2}
-      {...props}
-    />
-  );
-};
-
-/////////////////////////////////////////////////////////////////////
-
 const PopoverContent = ({
   onKeyDown,
   onBlur: onBlurProp,
   onMouseLeave,
   onMouseEnter,
   onFocus,
-  hasArrow,
-  arrowSize,
-  arrowShadowColor,
-  children,
+  gutter = 4,
   "aria-label": ariaLabel,
   ...props
 }) => {
@@ -169,7 +107,6 @@ const PopoverContent = ({
     popoverRef,
     referenceRef,
     placement,
-    initialFocusRef,
     popoverId,
     isOpen,
     onBlur,
@@ -177,9 +114,7 @@ const PopoverContent = ({
     onClose,
     isHoveringRef,
     trigger,
-    hasHeadingRef,
     headerId,
-    hasBodyRef,
     bodyId,
     usePortal,
   } = usePopoverContext();
@@ -188,62 +123,52 @@ const PopoverContent = ({
   const bg = colorMode === "light" ? "white" : "gray.700";
 
   let eventHandlers = {};
+  let roleProps = {};
 
   if (trigger === "click") {
     eventHandlers = {
-      onBlur: event => {
-        onBlur(event);
-        if (onBlurProp) {
-          onBlurProp(event);
-        }
-      },
+      onBlur: wrapEvent(onBlurProp, onBlur),
+    };
+
+    roleProps = {
+      role: "dialog",
+      "aria-modal": "false",
     };
   }
 
   if (trigger === "hover") {
     eventHandlers = {
-      onMouseEnter: event => {
+      onMouseEnter: wrapEvent(onMouseEnter, () => {
         isHoveringRef.current = true;
-        if (onMouseEnter) {
-          onMouseEnter(event);
-        }
-      },
-      onMouseLeave: event => {
+      }),
+      onMouseLeave: wrapEvent(onMouseLeave, () => {
         isHoveringRef.current = false;
+        setTimeout(onClose, 300);
+      }),
+    };
 
-        setTimeout(() => {
-          onClose();
-        }, 300);
-
-        if (onMouseLeave) {
-          onMouseLeave(event);
-        }
-      },
+    roleProps = {
+      role: "tooltip",
     };
   }
 
   eventHandlers = {
     ...eventHandlers,
-    onKeyDown: event => {
+    onKeyDown: wrapEvent(onKeyDown, event => {
       if (event.key === "Escape" && closeOnEsc) {
         onClose && onClose();
       }
-
-      if (onKeyDown) {
-        onKeyDown(event);
-      }
-    },
+    }),
   };
 
   return (
     <Popper
+      as="section"
       usePortal={usePortal}
       isOpen={isOpen}
       placement={placement}
       aria-label={ariaLabel}
       anchorEl={referenceRef.current}
-      role="dialog"
-      aria-modal="false"
       ref={popoverRef}
       bg={bg}
       id={popoverId}
@@ -257,21 +182,14 @@ const PopoverContent = ({
       rounded="md"
       shadow="sm"
       maxWidth="xs"
-      willUseTransition
+      modifiers={{ offset: { enabled: true, offset: `0, ${gutter}` } }}
       _focus={{ outline: 0, shadow: "outline" }}
-      {...(hasHeadingRef.current && { "aria-labelledby": headerId })}
-      {...(hasBodyRef.current && { "aria-describedby": bodyId })}
+      aria-labelledby={headerId}
+      aria-describedby={bodyId}
+      {...roleProps}
       {...eventHandlers}
       {...props}
-    >
-      {({ transition }) => (
-        <Fade {...transition}>
-          <Box role="group" bg="inherit">
-            {children}
-          </Box>
-        </Fade>
-      )}
-    </Popper>
+    />
   );
 };
 
@@ -282,8 +200,7 @@ const Popover = ({
   isOpen: isOpenProp,
   initialFocusRef,
   defaultIsOpen,
-  gutter = 4,
-  usePortal,
+  usePortal = false,
   returnFocusOnClose = true,
   trigger = "click",
   placement,
@@ -297,8 +214,6 @@ const Popover = ({
   const { current: isControlled } = useRef(isOpenProp != null);
 
   const isHoveringRef = useRef();
-  const hasHeadingRef = useRef(false);
-  const hasBodyRef = useRef(false);
 
   const referenceRef = useRef();
   const popoverRef = useRef();
@@ -394,8 +309,6 @@ const Popover = ({
     headerId,
     bodyId,
     popoverId,
-    hasHeadingRef,
-    hasBodyRef,
     onOpen,
     onClose,
     onToggle,
@@ -417,13 +330,68 @@ const Popover = ({
   );
 };
 
+/////////////////////////////////////////////////////////////////////
+
+const PopoverHeader = props => {
+  const { headerId } = usePopoverContext();
+  return (
+    <Box
+      as="header"
+      id={headerId}
+      px={3}
+      py={2}
+      borderBottomWidth="1px"
+      {...props}
+    />
+  );
+};
+
+/////////////////////////////////////////////////////////////////////
+
+const PopoverFooter = props => (
+  <Box as="footer" px={3} py={2} borderTopWidth="1px" {...props} />
+);
+
+/////////////////////////////////////////////////////////////////////
+
+const PopoverBody = props => {
+  const { bodyId } = usePopoverContext();
+  return <Box id={bodyId} flex="1" px={3} py={2} {...props} />;
+};
+
+/////////////////////////////////////////////////////////////////////
+
+const PopoverArrow = props => <PopperArrow {...props} />;
+
+/////////////////////////////////////////////////////////////////////
+
+const PopoverCloseButton = ({ onClick, ...props }) => {
+  const { onClose } = usePopoverContext();
+  return (
+    <CloseButton
+      size="sm"
+      onClick={wrapEvent(onClick, onClose)}
+      aria-label="Close"
+      pos="absolute"
+      rounded="md"
+      top={1}
+      right={2}
+      p={2}
+      {...props}
+    />
+  );
+};
+
+/////////////////////////////////////////////////////////////////////
+
 export default Popover;
 export {
-  usePopoverContext,
+  PopoverHeader,
+  PopoverFooter,
+  PopoverBody,
   Popover,
   PopoverTrigger,
   PopoverContent,
   PopoverArrow,
   PopoverCloseButton,
 };
-export * from "./components";
