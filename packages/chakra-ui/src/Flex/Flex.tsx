@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Box, BoxProps, SystemProps } from "../Box";
+import { Box, BoxProps, SystemProps } from "@chakra-ui/layout";
 
 interface FlexOptions {
   /**
