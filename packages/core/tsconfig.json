@@ -1,43 +1,11 @@
 {
-  "include": ["src", "types", "../chakra-ui-layout/src/SimpleGrid"],
+  "extends": "../../tsconfig-base.json",
+  "include": ["src", "types"],
   "exclude": [
     "**/*.spec.ts",
     "**/*.spec.tsx",
     "**/*.test.ts",
     "**/*.test.tsx",
     "**/*/examples.tsx"
-  ],
-  "compilerOptions": {
-    "target": "es5",
-    "module": "esnext",
-    "lib": ["dom", "esnext"],
-    "importHelpers": true,
-    "declaration": true,
-    "sourceMap": true,
-    "rootDir": "./",
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    // "strictPropertyInitialization": true,
-    // "noImplicitThis": true,
-    // "alwaysStrict": true,
-    // "noUnusedLocals": true,
-    // "noUnusedParameters": true,
-    // "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "types": ["jest"],
-    "typeRoots": [
-      "./@types",
-      "node_modules/@types",
-      "../../node_modules/@types"
-    ],
-    "moduleResolution": "node",
-    "baseUrl": "./",
-    "paths": {
-      "*": ["src/*", "node_modules/*"]
-    },
-    "jsx": "react",
-    "esModuleInterop": true
-  }
+  ]
 }
