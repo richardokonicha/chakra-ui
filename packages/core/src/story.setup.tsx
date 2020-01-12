@@ -7,12 +7,12 @@ import {
 } from "@chakra-ui/system";
 import * as React from "react";
 import { Global } from "@emotion/core";
-import { LayerManager } from "./Layers";
+import { PortalManager } from "@chakra-ui/portal";
 
 const [ThemeProvider, useTheme] = createThemeContext(theme);
 
 const setup = (story: () => any) => (
-  <LayerManager>
+  <PortalManager>
     <ThemeProvider>
       <ColorModeProvider>
         <CSSReset />
@@ -27,7 +27,7 @@ const setup = (story: () => any) => (
         {story()}
       </ColorModeProvider>
     </ThemeProvider>
-  </LayerManager>
+  </PortalManager>
 );
 
 export { ThemeProvider, useTheme };
