@@ -172,7 +172,6 @@ type LabelProps = CheckboxProps & React.HTMLAttributes<HTMLLabelElement>;
 export const CheckboxProvider = React.forwardRef(
   (props: LabelProps, ref: React.Ref<HTMLLabelElement>) => {
     const { remaining, ...context } = useCheckbox(props);
-    console.log(remaining);
     return (
       <CheckboxContextProvider value={context}>
         <label ref={ref} {...remaining}>
