@@ -8,12 +8,18 @@ import {
 import { addDecorator } from "@storybook/react"
 import * as React from "react"
 
-addDecorator((StoryFn: Function) => (
+export const ChakraProvider: React.FC = ({ children }) => (
   <ThemeProvider theme={theme}>
     <ColorModeProvider>
       <GlobalStyle />
       <CSSReset />
-      <StoryFn />
+      {children}
     </ColorModeProvider>
   </ThemeProvider>
+)
+
+addDecorator((StoryFn: Function) => (
+  <ChakraProvider>
+    <StoryFn />
+  </ChakraProvider>
 ))
