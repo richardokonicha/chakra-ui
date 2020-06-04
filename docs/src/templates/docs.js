@@ -24,7 +24,6 @@ function LastEdited(props) {
   )
 }
 
-// memoized to prevent from re-rendering on in-page anchor link navigation
 const Body = (props) => {
   const { relativePath, body, previous, next, modifiedTime } = props
   return (
