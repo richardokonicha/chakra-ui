@@ -15,6 +15,7 @@ import {
   TransitionsProvider,
   useTransitionConfig,
   useTransitions,
+  TransitionConfigProps,
 } from "@chakra-ui/transition"
 import { createContext, cx, __DEV__, callAllHandlers } from "@chakra-ui/utils"
 import * as React from "react"
@@ -28,7 +29,10 @@ const [ModalContextProvider, useModalContext] = createContext<UseModalReturn>({
     "useModalContext: `context` is undefined. Seems you forgot to wrap modal components in `<Modal />`",
 })
 
-export interface ModalProps extends UseModalProps, ThemingProps {
+export interface ModalProps
+  extends UseModalProps,
+    ThemingProps,
+    TransitionConfigProps {
   children?: React.ReactNode
   /**
    *  If `true`, the modal will be centered on screen.
