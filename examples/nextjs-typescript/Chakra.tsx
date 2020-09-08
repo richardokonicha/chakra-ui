@@ -10,7 +10,9 @@ export const Chakra = ({ children, cookies }: ChakraProps) => {
   return (
     <ChakraProvider
       resetCSS
-      storageManager={cookies ? cookieStorageManager(cookies) : undefined}
+      storageManager={
+        typeof cookies === "string" ? cookieStorageManager(cookies) : undefined
+      }
     >
       {children}
     </ChakraProvider>
